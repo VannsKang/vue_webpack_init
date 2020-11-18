@@ -1,15 +1,18 @@
 <template>
   <div id="app">
     <message>Hello There</message>
-    <message>Hello There Again</message>
+    <message>Hello There Again {{ msg }}</message>
   </div>
 </template>
 
 <script>
 import Message from "./components/Message";
+
 export default {
   name: "app",
+
   components: { Message },
+
   data() {
     return {
       msg: "Welcome to Your Vue.js App"
@@ -18,7 +21,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 #app {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

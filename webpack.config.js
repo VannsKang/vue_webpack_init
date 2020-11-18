@@ -1,15 +1,22 @@
-var path = require("path");
-var webpack = require("webpack");
+const webpack = require("webpack");
+const HTMLWebpackPlugin = require("html-webpack-plugin");
 const { VueLoaderPlugin } = require("vue-loader");
+const { join } = require("path");
+const { NODE_ENV } = process.env;
 
-module.exports = {
-  entry: "./src/main.js",
+const webpackConfig = {
+  mode: NODE_ENV,
+
+  entry: ["@babel/polyfill", join(__dirname, "./src/main.js")],
+
   output: {
-    path: path.resolve(__dirname, "./dist"),
+    path: join(__dirname, "./dist"),
     publicPath: "/dist/",
     filename: "build.js"
   },
+
   plugins: [new VueLoaderPlugin()],
+
   module: {
     rules: [
       {
@@ -38,8 +45,10 @@ module.exports = {
               "css-loader",
               "sass-loader?indentedSyntax"
             ]
-          }
+          },
           // other vue-loader options go here
+          postLoaders: { html: "babel-loader" },
+          excludedPreLoaders: /(eslint-loader)/
         }
       },
       {
@@ -56,40 +65,56 @@ module.exports = {
       }
     ]
   },
+
   resolve: {
     alias: {
       vue$: "vue/dist/vue.esm.js"
     },
     extensions: ["*", ".js", ".vue", ".json"]
   },
-  devServer: {
-    historyApiFallback: true,
-    noInfo: true,
-    overlay: true
-  },
+
   performance: {
     hints: false
-  },
-  devtool: "#eval-source-map"
+  }
 };
 
-if (process.env.NODE_ENV === "production") {
-  module.exports.devtool = "#source-map";
-  // http://vue-loader.vuejs.org/en/workflow/production.html
-  module.exports.plugins = (module.exports.plugins || []).concat([
-    new webpack.DefinePlugin({
-      "process.env": {
-        NODE_ENV: '"production"'
-      }
-    }),
-    new webpack.optimize.UglifyJsPlugin({
-      sourceMap: true,
-      compress: {
-        warnings: false
-      }
-    }),
+// SECTION NPM run control
+
+if (NODE_ENV === "development") {
+  webpackConfig.devServer = {
+    clientLogLevel: "warning",
+    historyApiFallback: true,
+    port: 9000,
+    hot: true,
+    open: true,
+    // noInfo: true,
+    overlay: true,
+    quiet: true // necessary for FriendlyErrorsPlugin
+  };
+
+  webpackConfig.devtool = "#eval-source-map";
+
+  webpackConfig.plugins = [
+    ...webpackConfig.plugins,
+    new HTMLWebpackPlugin({
+      showErrors: true,
+      cache: true,
+      // title: "brandi test",
+      templage: join(__dirname, "index.html")
+    })
+  ];
+}
+
+if (NODE_ENV === "production") {
+  webpackConfig.devtool = "#source-map";
+
+  webpackConfig.plugins = [
+    ...webpackConfig.plugins,
+
     new webpack.LoaderOptionsPlugin({
       minimize: true
     })
-  ]);
+  ];
 }
+
+module.exports = webpackConfig;
